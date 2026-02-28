@@ -86,13 +86,21 @@ export declare class UpdateBuilder {
     private conditions;
     constructor(tableName: string);
     /**
-     * SET clause
+     * SET clause - accepts object or individual field-value pairs
      */
-    set(field: string, value: unknown): this;
+    set(fieldOrObject: string | Record<string, unknown>, value?: unknown): this;
     /**
      * WHERE clause
      */
     where(field: string, operator: SQLOperator, value: unknown): this;
+    /**
+     * WHERE IN clause
+     */
+    whereIn(field: string, values: unknown[]): this;
+    /**
+     * WHERE BETWEEN clause
+     */
+    whereBetween(field: string, min: unknown, max: unknown): this;
     /**
      * Build UPDATE query
      */
@@ -112,6 +120,14 @@ export declare class DeleteBuilder {
      * WHERE clause
      */
     where(field: string, operator: SQLOperator, value: unknown): this;
+    /**
+     * WHERE IN clause
+     */
+    whereIn(field: string, values: unknown[]): this;
+    /**
+     * WHERE BETWEEN clause
+     */
+    whereBetween(field: string, min: unknown, max: unknown): this;
     /**
      * Build DELETE query
      */

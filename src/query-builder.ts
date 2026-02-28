@@ -219,10 +219,20 @@ export class UpdateBuilder {
   }
 
   /**
-   * SET clause
+   * SET clause - accepts object or individual field-value pairs
    */
-  set(field: string, value: unknown): this {
-    this.updateFields.set(field, value);
+  set(fieldOrObject: string | Record<string, unknown>, value?: unknown): this {
+    if (typeof fieldOrObject === 'object' && fieldOrObject !== null && value === undefined) {
+      // Object form: set({ name: 'Bob', age: 30 })
+      for (const [key, val] of Object.entries(fieldOrObject)) {
+        this.updateFields.set(key, val);
+      }
+    } else if (typeof fieldOrObject === 'string') {
+      // Field-value form: set('name', 'Bob')
+      this.updateFields.set(fieldOrObject, value);
+    } else {
+      throw new Error('Invalid arguments to set()');
+    }
     return this;
   }
 
@@ -231,6 +241,32 @@ export class UpdateBuilder {
    */
   where(field: string, operator: SQLOperator, value: unknown): this {
     this.conditions.push({ field, operator, value });
+    return this;
+  }
+
+  /**
+   * WHERE IN clause
+   */
+  whereIn(field: string, values: unknown[]): this {
+    const condition: SQLCondition = {
+      field,
+      operator: 'IN',
+      values,
+    };
+    this.conditions.push(condition);
+    return this;
+  }
+
+  /**
+   * WHERE BETWEEN clause
+   */
+  whereBetween(field: string, min: unknown, max: unknown): this {
+    const condition: SQLCondition = {
+      field,
+      operator: 'BETWEEN',
+      values: [min, max],
+    };
+    this.conditions.push(condition);
     return this;
   }
 
@@ -255,8 +291,21 @@ export class UpdateBuilder {
     if (this.conditions.length > 0) {
       const whereChunks: string[] = [];
       for (const condition of this.conditions) {
-        whereChunks.push(`${condition.field} ${condition.operator} ?`);
-        params.push(condition.value);
+        if (condition.operator === 'IN' && condition.values) {
+          const placeholders = condition.values.map(() => '?').join(', ');
+          whereChunks.push(`${condition.field} IN (${placeholders})`);
+          params.push(...condition.values);
+        } else if (condition.operator === 'NOT IN' && condition.values) {
+          const placeholders = condition.values.map(() => '?').join(', ');
+          whereChunks.push(`${condition.field} NOT IN (${placeholders})`);
+          params.push(...condition.values);
+        } else if (condition.operator === 'BETWEEN' && condition.values && condition.values.length === 2) {
+          whereChunks.push(`${condition.field} BETWEEN ? AND ?`);
+          params.push(condition.values[0], condition.values[1]);
+        } else {
+          whereChunks.push(`${condition.field} ${condition.operator} ?`);
+          params.push(condition.value);
+        }
       }
       sql += ` WHERE ${whereChunks.join(' AND ')}`;
     }
@@ -285,6 +334,32 @@ export class DeleteBuilder {
   }
 
   /**
+   * WHERE IN clause
+   */
+  whereIn(field: string, values: unknown[]): this {
+    const condition: SQLCondition = {
+      field,
+      operator: 'IN',
+      values,
+    };
+    this.conditions.push(condition);
+    return this;
+  }
+
+  /**
+   * WHERE BETWEEN clause
+   */
+  whereBetween(field: string, min: unknown, max: unknown): this {
+    const condition: SQLCondition = {
+      field,
+      operator: 'BETWEEN',
+      values: [min, max],
+    };
+    this.conditions.push(condition);
+    return this;
+  }
+
+  /**
    * Build DELETE query
    */
   build(): { sql: string; params: unknown[] } {
@@ -297,8 +372,21 @@ export class DeleteBuilder {
 
     const whereChunks: string[] = [];
     for (const condition of this.conditions) {
-      whereChunks.push(`${condition.field} ${condition.operator} ?`);
-      params.push(condition.value);
+      if (condition.operator === 'IN' && condition.values) {
+        const placeholders = condition.values.map(() => '?').join(', ');
+        whereChunks.push(`${condition.field} IN (${placeholders})`);
+        params.push(...condition.values);
+      } else if (condition.operator === 'NOT IN' && condition.values) {
+        const placeholders = condition.values.map(() => '?').join(', ');
+        whereChunks.push(`${condition.field} NOT IN (${placeholders})`);
+        params.push(...condition.values);
+      } else if (condition.operator === 'BETWEEN' && condition.values && condition.values.length === 2) {
+        whereChunks.push(`${condition.field} BETWEEN ? AND ?`);
+        params.push(condition.values[0], condition.values[1]);
+      } else {
+        whereChunks.push(`${condition.field} ${condition.operator} ?`);
+        params.push(condition.value);
+      }
     }
 
     sql += ` WHERE ${whereChunks.join(' AND ')}`;
