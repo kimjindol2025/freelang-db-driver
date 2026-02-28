@@ -1,0 +1,42 @@
+{
+  "name": "@freelang/database-driver",
+  "version": "1.0.0",
+  "description": "SQLite & PostgreSQL drivers - npm sqlite3/pg replacement for FreeLang",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node -r ts-node/register test/index.test.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "freelang",
+    "database",
+    "sqlite",
+    "postgresql",
+    "orm",
+    "driver",
+    "pool"
+  ],
+  "category": "database",
+  "subcategory": "driver",
+  "tags": [
+    "freelang",
+    "database",
+    "sqlite",
+    "postgresql",
+    "orm",
+    "driver",
+    "pool",
+    "typescript"
+  ],
+  "author": "Kim Team",
+  "license": "MIT"
+}
