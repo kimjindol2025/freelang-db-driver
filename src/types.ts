@@ -101,7 +101,7 @@ export interface Transaction {
 }
 
 /**
- * Database driver interface
+ * Synchronous Database driver interface (SQLite)
  */
 export interface IDatabase {
   query<T = unknown>(sql: string, params?: unknown[]): T[];
@@ -109,4 +109,24 @@ export interface IDatabase {
   run(sql: string, params?: unknown[]): RunResult;
   transaction<T>(fn: (tx: Transaction) => T): T;
   close(): void;
+}
+
+/**
+ * Asynchronous Database driver interface (PostgreSQL)
+ */
+export interface IDatabaseAsync {
+  query<T = unknown>(sql: string, params?: unknown[]): Promise<T[]>;
+  get<T = unknown>(sql: string, params?: unknown[]): Promise<T | undefined>;
+  run(sql: string, params?: unknown[]): Promise<RunResult>;
+  transaction<T>(fn: (tx: TransactionAsync) => Promise<T>): Promise<T>;
+  close(): Promise<void>;
+}
+
+/**
+ * Async Transaction context
+ */
+export interface TransactionAsync {
+  query<T = unknown>(sql: string, params?: unknown[]): Promise<T[]>;
+  get<T = unknown>(sql: string, params?: unknown[]): Promise<T | undefined>;
+  run(sql: string, params?: unknown[]): Promise<RunResult>;
 }
